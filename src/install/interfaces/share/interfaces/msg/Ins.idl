@@ -1,0 +1,76 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from interfaces/msg/Ins.msg
+// generated code does not contain a copyright notice
+
+
+module interfaces {
+  module msg {
+    @verbatim (language="comment", text=
+      "std_msgs/Header header")
+    struct Ins {
+      octet status;
+
+      @verbatim (language="comment", text=
+        " pitching angle, grad")
+      double pitch;
+
+      @verbatim (language="comment", text=
+        " angle of roll, grad")
+      double roll;
+
+      @verbatim (language="comment", text=
+        " true course, grad")
+      double course;
+
+      @verbatim (language="comment", text=
+        " the angular x velocity, grad/s")
+      double w_x;
+
+      @verbatim (language="comment", text=
+        " the angular y velocity, grad/s")
+      double w_y;
+
+      @verbatim (language="comment", text=
+        " the angular z velocity, grad/s")
+      double w_z;
+
+      @verbatim (language="comment", text=
+        " x-axis acceleration ,m/s/s")
+      double a_x;
+
+      @verbatim (language="comment", text=
+        " y-axis acceleration,m/s/s")
+      double a_y;
+
+      @verbatim (language="comment", text=
+        " z-axis acceleration,m/s/s")
+      double a_z;
+
+      double gps_speed;
+
+      double gps_track_angle;
+
+      double gps_satellite_number;
+
+      double altitude;
+
+      @verbatim (language="comment", text=
+        " Latitude. Positive is north of equator; negative is south.")
+      @unit (value="degrees")
+      double latitude;
+
+      @verbatim (language="comment", text=
+        " Longitude. Positive is east of prime meridian; negative is west.")
+      @unit (value="degrees")
+      double longitude;
+
+      double gps_utc_date;
+
+      double utc_time;
+
+      uint16 targeting;
+
+      uint16 temperature;
+    };
+  };
+};

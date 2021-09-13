@@ -1,0 +1,28 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from interfaces/msg/AntiSpoofing.msg
+// generated code does not contain a copyright notice
+
+
+module interfaces {
+  module msg {
+    module AntiSpoofing_Constants {
+      const octet NORMAL = 0;
+      const octet ATTACKED = 1;
+      const octet SIMULATED = 0;
+      const octet WORKED = 1;
+    };
+    struct AntiSpoofing {
+      @verbatim (language="comment", text=
+        " Параметры работы модуля")
+      float a;
+
+      float b;
+
+      float c;
+
+      octet nav_state;
+
+      octet module_state;
+    };
+  };
+};
