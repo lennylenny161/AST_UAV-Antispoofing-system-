@@ -1,6 +1,12 @@
+msg/AnalyzerCallback.idl
+msg/AnalyzerCallback.msg
 msg/AntiSpoofing.idl
 msg/AntiSpoofing.msg
 msg/Ins.idl
 msg/Ins.msg
 msg/SpoofingControl.idl
 msg/SpoofingControl.msg
+srv/AnalyzerServer.idl
+srv/AnalyzerServer.srv
+srv/AnalyzerServer_Request.msg
+srv/AnalyzerServer_Response.msg

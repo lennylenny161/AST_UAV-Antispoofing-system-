@@ -24,10 +24,16 @@ set(msg_files
   "msg/Ins.msg"
   "msg/AntiSpoofing.msg"
   "msg/SpoofingControl.msg"
+  "msg/AnalyzerCallback.msg"
 )
+
+set(srv_files
+  "srv/AnalyzerServer.srv"
+  )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
    ${msg_files}
+   ${srv_files}
    DEPENDENCIES std_msgs
  )
 # uncomment the following section in order to fill in

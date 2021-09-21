@@ -5,13 +5,29 @@ import functools
 import configparser
 import datetime
 import copy
+import logging
 from rclpy.node import Node
 from collections import deque
 from interfaces.msg import SpoofingControl
 from interfaces.msg import Ins
+from interfaces.msg import AnalyzerCallback
 from .FileReader import *
 from .simulator import *
 from .database import *
+from .clientTest import *
+
+class SimulatorCallbackPublisher(Node):
+    def __init__(self):
+        super().__init__('simulator_publisher_class')
+        self.publisher_ = self.create_publisher(AnalyzerCallback, 'simulator_topic', 10)
+
+    def callback(self, data):
+        msg = AnalyzerCallback()
+        msg.check_result = data.check_result
+        msg.error_code = data.error_code
+        msg.error_description = data.error_description
+        print("SEND CALLBACK", msg)
+        self.publisher_.publish(msg)
 
 class SpoofingControlSubscriber(Node):
 
@@ -50,7 +66,6 @@ class DataSubscriber(Node):
         self.subscription
 
     def listener_callback(self, msg, control_state):
-        print('DataSubscriberControlState "%a"' % (control_state[0]))
 
         data = self.parse_msg_to_data(msg)
         self.save_data_buffer(data)
@@ -60,11 +75,12 @@ class DataSubscriber(Node):
 
         if control_state[0].decode('utf-8') == '1':
             print("ATTACK")
-            threading.Thread(target=self.save_data_to_DB(data, round_value, 1)).start()
+            logging.info('catch attack state time = %s', str(timestamp))
+            threading.Thread(target=self.save_data_to_DB, args=(data, round_value, 1,)).start()
             # simulate_value = self.simulate()
             # threading.Thread(target=self.create_callback_pub(simulate_value)).start()
         else:
-            threading.Thread(target=self.save_data_to_DB(data, round_value, 0)).start()
+            threading.Thread(target=self.save_data_to_DB, args=(data, round_value, 0,)).start()
 
         self.get_logger().info('Subscribe data: status "%a" '
                                ' pitch "%f" '
@@ -111,8 +127,8 @@ class DataSubscriber(Node):
         conn = DatabaseWorker.create_connection()
         DatabaseWorker.write_data(conn, data, time, beFake)
 
-
     def simulate(self):
+        logging.info('simulate data')
         simulator = Simulator()
         new_value = simulator.simulate_new_value(self.data_buffer)
         return new_value
@@ -154,22 +170,95 @@ class DataSubscriber(Node):
         return d
 
 
+unsent_data = []
+simulator_publisher: SimulatorCallbackPublisher
+
+
+def get_update_unsent_data_time():
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    unsent_data_time = int(config['SimulatorConfig']['unsent_data_update_time'])
+    return unsent_data_time
+
+
+def loop_read_database():
+    global unsent_data
+    while True:
+        connection = DatabaseWorker.create_connection()
+        print(len(unsent_data), "Длинна")
+        if len(unsent_data) == 0:
+            data = DatabaseWorker.read_unsent_data(connection)
+            unsent_data = data
+            print(data, 'DATA')
+            print(len(data), "РАЗМЕР МАССИВА")
+            threading.Thread(target=send_data_to_analyzer).start()
+        else:
+            print("NOT EMPTY")
+        loop_time = get_update_unsent_data_time()
+        time.sleep(loop_time)
+
+
+def self_spin(client, data):
+    print("self_spin")
+    global simulator_publisher
+    while rclpy.ok():
+        rclpy.spin_once(client)
+        if client.future.done():
+            result = client.future.result() #SENT TO GUI
+            print(result, "RESULT")
+            logging.info('send data to callback publisher')
+            simulator_publisher.callback(result)
+            connection = DatabaseWorker.create_connection()
+            DatabaseWorker.write_send_mark(connection, data[0], 1)
+            client.destroy_node()
+            print('SENT', data[0])
+            break
+
+
+def group_call(data):
+    name = "AnalyzerClientAsync"
+    client = AnalyzerClientAsync(name)
+    client.send_request(data)
+    self_spin(client, data)
+
+
+def send_data_to_analyzer():
+    global unsent_data
+    copy_data = unsent_data.copy()
+    for data in copy_data:
+        print('send_data_to_analyzer LOOP')
+        group_call(data)
+        unsent_data.remove(data)
+    print("End Loop")
+
+
 def main(args=None):
     rclpy.init(args=args)
+
+    Loger.set_type("sim")
+
+    database_thread = threading.Thread(target=loop_read_database)
+    database_thread.setDaemon(True)
+    database_thread.start()
 
     spoof_control_state = [bytes('0', 'utf-8')]
     print('MAIN "%a"' % (id(spoof_control_state)))
 
+    global simulator_publisher
+
     data_subscriber = DataSubscriber('data_topic', spoof_control_state)
     spoofing_subscriber = SpoofingControlSubscriber('spoofing_control_topic', spoof_control_state)
+    simulator_publisher = SimulatorCallbackPublisher()
 
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(data_subscriber)
     executor.add_node(spoofing_subscriber)
+    executor.add_node(simulator_publisher)
 
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
     rate = data_subscriber.create_rate(1) # Потыкать
+
     try:
         while rclpy.ok():
             rate.sleep()

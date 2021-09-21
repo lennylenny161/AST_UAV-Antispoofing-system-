@@ -5,8 +5,34 @@ import threading
 
 from interfaces.msg import SpoofingControl
 from interfaces.msg import Ins
+from interfaces.msg import AnalyzerCallback
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .RosAttackUI import *
+
+
+class Monitor(QtCore.QObject):
+
+    updateText = QtCore.pyqtSignal(str)
+
+    def update_list(self, txt):
+        t_monitor = Thread(self.monitor_vector, args=(txt,), kwargs={}, parent=self)
+        t_monitor.daemon = True
+        t_monitor.start()
+
+    def monitor_vector(self, txt):
+        self.updateText.emit(txt)
+
+
+class Thread(QtCore.QThread):
+
+    def __init__(self, fn, args, kwargs, parent=None):
+        super(Thread, self).__init__(parent)
+        self._fn = fn
+        self._args = args
+        self._kwargs = kwargs
+
+    def run(self):
+        self._fn(*self._args, **self._kwargs)
 
 class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -15,16 +41,21 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.pushButton.clicked.connect(self.start_state_change)
 
+        self.monitor = Monitor()
+        self.monitor.updateText.connect(self.set_text)
+
         threading.Thread(target=self.create_exec).start()
 
     def create_exec(self):
         rclpy.init(args=None)
 
         self.state_publisher = StatePublisher()
+        self.simulator_subscriber = SimulatorSubscriber(self.monitor)
 
         executor = rclpy.executors.MultiThreadedExecutor()
 
         executor.add_node(self.state_publisher)
+        executor.add_node(self.simulator_subscriber)
 
         executor_thread = threading.Thread(target=executor.spin, daemon=True)
         executor_thread.start()
@@ -46,6 +77,31 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
             self.pushButton.setText("Прекратить атаку")
         else:
             self.pushButton.setText("Запустить атаку")
+
+    def set_text(self, text):
+        self.textBrowser.insertPlainText(text)
+
+class SimulatorSubscriber(Node):
+
+    def __init__(self, monitor):
+        super().__init__('simulator_subscriber')
+
+        callback_lambda = lambda x: self.listener_callback(x, monitor)
+        self.subscription = self.create_subscription(
+            AnalyzerCallback,
+            'simulator_topic',
+            callback_lambda,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg, monitor):
+        print("CALLBACK SUBSCRIBER")
+        print(msg)
+        text = str(msg.check_result) + str(msg.error_code) + msg.error_description + '\n'
+        print(text)
+        # app.set_text(text)
+        monitor.update_list(text)
+        #threading.Thread(target=textField.setText, args=(text,), daemon=True).start()
 
 class StatePublisher(Node):
 

@@ -1,0 +1,33 @@
+float64 time
+
+float64 pitch
+float64 roll
+float64 course
+
+float64 w_x
+float64 w_y
+float64 w_z
+
+float64 a_x
+float64 a_y
+float64 a_z 
+
+float64 gps_speed
+float64 gps_track_angle
+float64 gps_satellite_number
+float64 altitude
+
+float64 latitude
+float64 longitude
+
+float64 gps_utc_date
+float64 utc_time
+
+uint16 targeting
+uint16 temperature
+---
+bool check_result
+int64 error_code
+string error_description
+
+
