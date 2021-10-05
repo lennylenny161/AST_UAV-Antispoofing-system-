@@ -6,6 +6,7 @@ import configparser
 import datetime
 import copy
 import logging
+import queue
 from rclpy.node import Node
 from collections import deque
 from interfaces.msg import SpoofingControl
@@ -15,8 +16,6 @@ from .FileReader import *
 from .simulator import *
 from .database import *
 from .clientTest import *
-
-database_worker_connection = DatabaseWorker().create_connection()
 
 class SimulatorCallbackPublisher(Node):
     def __init__(self):
@@ -58,8 +57,10 @@ class DataSubscriber(Node):
 
     def __init__(self, topic_name, control_state):
         super().__init__("data_node")
+        q = queue.Queue()
+        threading.Thread(target=self.queue_loop_reader, args=(q,), daemon=True).start()
         self.data_buffer = self.get_simulate_data_size()
-        callback_lambda = lambda x: self.listener_callback(x, control_state)
+        callback_lambda = lambda x: self.listener_callback(x, control_state, q)
         self.subscription = self.create_subscription(
             Ins,
             topic_name,
@@ -67,7 +68,8 @@ class DataSubscriber(Node):
             10)
         self.subscription
 
-    def listener_callback(self, msg, control_state):
+    def listener_callback(self, msg, control_state, q):
+
         data = self.parse_msg_to_data(msg)
         self.save_data_buffer(data)
 
@@ -77,11 +79,12 @@ class DataSubscriber(Node):
         if control_state[0].decode('utf-8') == '1':
             print("ATTACK")
             logging.info('catch attack state time = %s', str(timestamp))
-            threading.Thread(target=self.save_data_to_DB, args=(data, round_value, 1,)).start()
+
+            threading.Thread(target=self.add_data_in_queue, args=(q, data, round_value, 1,)).start()
             # simulate_value = self.simulate()
             # threading.Thread(target=self.create_callback_pub(simulate_value)).start()
         else:
-            threading.Thread(target=self.save_data_to_DB, args=(data, round_value, 0,)).start()
+            threading.Thread(target=self.add_data_in_queue, args=(q, data, round_value, 0,)).start()
 
         # self.get_logger().info('Subscribe data: status "%a" '
         #                        ' pitch "%f" '
@@ -124,9 +127,26 @@ class DataSubscriber(Node):
         #                         msg.targeting,
         #                         msg.temperature))
 
+    def add_data_in_queue(self, q, data, time, beFake):
+        print("ADD TO QUEUE")
+        q.put([data, time, beFake])
+
+    def queue_loop_reader(self, q):
+        conn = DatabaseWorker().create_connection()
+        while True:
+            if q.empty():
+                pass
+            else:
+                print("GETGETGET QUEUE")
+                data = q.get()
+                # self.save_data_to_DB(data[0], data[1], data[2])
+                DatabaseWorker.write_data(conn, data[0], data[1], data[2])
+
+
     def save_data_to_DB(self, data, time, beFake):
-        global database_worker_connection
-        DatabaseWorker.write_data(database_worker_connection, data, time, beFake)
+        conn = DatabaseWorker().create_connection()
+        DatabaseWorker.write_data(conn, data, time, beFake)
+
 
     def simulate(self):
         logging.info('simulate data')
@@ -185,14 +205,14 @@ def get_update_unsent_data_time():
 def loop_read_database():
     global unsent_data
     while True:
-        global database_worker_connection
         print(len(unsent_data), "Длинна")
         if len(unsent_data) == 0:
-            data = DatabaseWorker.read_unsent_data(database_worker_connection)
+            conn = DatabaseWorker().create_connection()
+            data = DatabaseWorker.read_unsent_data(conn)
             unsent_data = data
             print(data, 'DATA')
             print(len(data), "РАЗМЕР МАССИВА")
-            threading.Thread(target=send_data_to_analyzer).start()
+            send_data_to_analyzer()
         else:
             print("NOT EMPTY")
         loop_time = get_update_unsent_data_time()
@@ -209,8 +229,8 @@ def self_spin(client, data):
             print(result, "RESULT")
             logging.info('send data to callback publisher')
             simulator_publisher.callback(result)
-            global database_worker_connection
-            DatabaseWorker.write_send_mark(database_worker_connection, data[0], 1)
+            conn = DatabaseWorker().create_connection()
+            DatabaseWorker.write_send_mark(conn, data[0], 1)
             client.destroy_node()
             print('SENT', data[0])
             break

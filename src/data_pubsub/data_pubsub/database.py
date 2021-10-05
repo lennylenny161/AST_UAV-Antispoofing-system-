@@ -13,7 +13,7 @@ class DatabaseWorker:
         Loger.set_type("db")
         conn = None
         try:
-            conn = sqlite3.connect('data_database', check_same_thread=False, timeout=5)
+            conn = sqlite3.connect('data_database', check_same_thread=False, isolation_level=None)
         except Error as e:
             logging.error("Cant connect database", e)
 
@@ -62,10 +62,12 @@ class DatabaseWorker:
         except sqlite3.Error as error:
             print("Failed to update sqlite table", error)
             logging.error("Failed to update sqlite table %s", error)
+
         finally:
             if connect:
-                #connect.close()
+                # connect.close()
                 logging.info("The SQLite connection is closed")
+
 
     @staticmethod
     def write_send_mark(connect, time, status):
@@ -85,7 +87,7 @@ class DatabaseWorker:
             logging.error("Failed to update sqlite table %s", error)
         finally:
             if connect:
-                #connect.close()
+                connect.close()
                 logging.info("The SQLite connection is closed")
 
     @staticmethod
@@ -93,11 +95,12 @@ class DatabaseWorker:
         Loger.set_type("db")
         try:
             cursor = connect.cursor()
-            sql = ''' SELECT * from msg_list where isSent = 0'''
+            sql = ''' SELECT * from msg_list where isSent = 0 LIMIT 20'''
             cursor.execute(sql)
             records = cursor.fetchall()
 
             cursor.close()
+            print(len(records), "_____РАЗМЕР SELECT___")
             return records
 
         except sqlite3.Error as error:
@@ -105,7 +108,7 @@ class DatabaseWorker:
             logging.error("Failed to read sqlite table %s", error)
         finally:
             if connect:
-                #connect.close()
+                connect.close()
                 logging.info("The SQLite connection is closed")
 
 
