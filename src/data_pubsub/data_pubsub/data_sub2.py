@@ -16,6 +16,8 @@ from .simulator import *
 from .database import *
 from .clientTest import *
 
+database_worker_connection = DatabaseWorker().create_connection()
+
 class SimulatorCallbackPublisher(Node):
     def __init__(self):
         super().__init__('simulator_publisher_class')
@@ -55,7 +57,7 @@ class SpoofingControlSubscriber(Node):
 class DataSubscriber(Node):
 
     def __init__(self, topic_name, control_state):
-        super().__init__(topic_name)
+        super().__init__("data_node")
         self.data_buffer = self.get_simulate_data_size()
         callback_lambda = lambda x: self.listener_callback(x, control_state)
         self.subscription = self.create_subscription(
@@ -66,12 +68,11 @@ class DataSubscriber(Node):
         self.subscription
 
     def listener_callback(self, msg, control_state):
-
         data = self.parse_msg_to_data(msg)
         self.save_data_buffer(data)
 
         timestamp = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1000000000)
-        round_value = round(timestamp, 4)
+        round_value = round(timestamp, 5)
 
         if control_state[0].decode('utf-8') == '1':
             print("ATTACK")
@@ -82,50 +83,50 @@ class DataSubscriber(Node):
         else:
             threading.Thread(target=self.save_data_to_DB, args=(data, round_value, 0,)).start()
 
-        self.get_logger().info('Subscribe data: status "%a" '
-                               ' pitch "%f" '
-                               ' roll "%f" '
-                               ' course "%f" '
-                               ' w_x "%f"'
-                               ' w_y "%f"'
-                               ' w_z "%f"'
-                               ' a_x "%f"'
-                               ' a_y "%f"'
-                               ' a_z "%f"'
-                               ' gps_speed "%f"'
-                               ' gps_track_angle "%f"'
-                               ' gps_satellite_number "%f"'
-                               ' altitude "%f"'
-                               ' latitude "%f"'
-                               ' longitude "%f"'
-                               ' gps_utc_date "%f"'
-                               ' utc_time "%f"'
-                               ' targeting "%i"'
-                               ' temperature "%i"'%
-                               (msg.status,
-                                msg.pitch,
-                                msg.roll,
-                                msg.course,
-                                msg.w_x,
-                                msg.w_y,
-                                msg.w_z,
-                                msg.a_x,
-                                msg.a_y,
-                                msg.a_z,
-                                msg.gps_speed,
-                                msg.gps_track_angle,
-                                msg.gps_satellite_number,
-                                msg.altitude,
-                                msg.latitude,
-                                msg.longitude,
-                                msg.gps_utc_date,
-                                msg.utc_time,
-                                msg.targeting,
-                                msg.temperature))
+        # self.get_logger().info('Subscribe data: status "%a" '
+        #                        ' pitch "%f" '
+        #                        ' roll "%f" '
+        #                        ' course "%f" '
+        #                        ' w_x "%f"'
+        #                        ' w_y "%f"'
+        #                        ' w_z "%f"'
+        #                        ' a_x "%f"'
+        #                        ' a_y "%f"'
+        #                        ' a_z "%f"'
+        #                        ' gps_speed "%f"'
+        #                        ' gps_track_angle "%f"'
+        #                        ' gps_satellite_number "%f"'
+        #                        ' altitude "%f"'
+        #                        ' latitude "%f"'
+        #                        ' longitude "%f"'
+        #                        ' gps_utc_date "%f"'
+        #                        ' utc_time "%f"'
+        #                        ' targeting "%i"'
+        #                        ' temperature "%i"'%
+        #                        (msg.status,
+        #                         msg.pitch,
+        #                         msg.roll,
+        #                         msg.course,
+        #                         msg.w_x,
+        #                         msg.w_y,
+        #                         msg.w_z,
+        #                         msg.a_x,
+        #                         msg.a_y,
+        #                         msg.a_z,
+        #                         msg.gps_speed,
+        #                         msg.gps_track_angle,
+        #                         msg.gps_satellite_number,
+        #                         msg.altitude,
+        #                         msg.latitude,
+        #                         msg.longitude,
+        #                         msg.gps_utc_date,
+        #                         msg.utc_time,
+        #                         msg.targeting,
+        #                         msg.temperature))
 
     def save_data_to_DB(self, data, time, beFake):
-        conn = DatabaseWorker.create_connection()
-        DatabaseWorker.write_data(conn, data, time, beFake)
+        global database_worker_connection
+        DatabaseWorker.write_data(database_worker_connection, data, time, beFake)
 
     def simulate(self):
         logging.info('simulate data')
@@ -184,10 +185,10 @@ def get_update_unsent_data_time():
 def loop_read_database():
     global unsent_data
     while True:
-        connection = DatabaseWorker.create_connection()
+        global database_worker_connection
         print(len(unsent_data), "Длинна")
         if len(unsent_data) == 0:
-            data = DatabaseWorker.read_unsent_data(connection)
+            data = DatabaseWorker.read_unsent_data(database_worker_connection)
             unsent_data = data
             print(data, 'DATA')
             print(len(data), "РАЗМЕР МАССИВА")
@@ -208,8 +209,8 @@ def self_spin(client, data):
             print(result, "RESULT")
             logging.info('send data to callback publisher')
             simulator_publisher.callback(result)
-            connection = DatabaseWorker.create_connection()
-            DatabaseWorker.write_send_mark(connection, data[0], 1)
+            global database_worker_connection
+            DatabaseWorker.write_send_mark(database_worker_connection, data[0], 1)
             client.destroy_node()
             print('SENT', data[0])
             break
@@ -218,6 +219,7 @@ def self_spin(client, data):
 def group_call(data):
     name = "AnalyzerClientAsync"
     client = AnalyzerClientAsync(name)
+    print("SEND DATA TO SERVER", data)
     client.send_request(data)
     self_spin(client, data)
 
@@ -246,9 +248,9 @@ def main(args=None):
 
     global simulator_publisher
 
-    data_subscriber = DataSubscriber('data_topic', spoof_control_state)
-    spoofing_subscriber = SpoofingControlSubscriber('spoofing_control_topic', spoof_control_state)
     simulator_publisher = SimulatorCallbackPublisher()
+    data_subscriber = DataSubscriber('/rtk_1/ins_data', spoof_control_state)
+    spoofing_subscriber = SpoofingControlSubscriber('spoofing_control_topic', spoof_control_state)
 
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(data_subscriber)

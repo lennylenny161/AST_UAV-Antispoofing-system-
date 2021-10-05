@@ -1,0 +1,16 @@
+{
+  "slice_size": 10,
+  "step_size": 1,
+  "attack_score": 1,
+  "required_fields": [
+    "number_of_satellites",
+    "battery_voltage"
+  ],
+  "fields": [
+    {
+      "name": "number_of_satellites",
+      "threshold": 0.01,
+      "score": 1
+    }
+  ]
+}

@@ -13,7 +13,7 @@ class DatabaseWorker:
         Loger.set_type("db")
         conn = None
         try:
-            conn = sqlite3.connect('data_database', check_same_thread=False)
+            conn = sqlite3.connect('data_database', check_same_thread=False, timeout=5)
         except Error as e:
             logging.error("Cant connect database", e)
 
@@ -52,7 +52,7 @@ class DatabaseWorker:
                     beFake,
                     is_sent)
 
-            sql = ''' INSERT INTO msg_list(msg_time,status,pitch,roll,course,w_x,w_y,w_z,a_x,a_y,a_z,gps_speed,gps_track_angle,gps_satellite_number,altitude,latitude,longitude,gps_utc_date,utc_time,targeting,temperature,beFake,isSent)
+            sql = ''' INSERT or IGNORE INTO msg_list(msg_time,status,pitch,roll,course,w_x,w_y,w_z,a_x,a_y,a_z,gps_speed,gps_track_angle,gps_satellite_number,altitude,latitude,longitude,gps_utc_date,utc_time,targeting,temperature,beFake,isSent)
                                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
 
             cursor.execute(sql, task)
@@ -64,7 +64,7 @@ class DatabaseWorker:
             logging.error("Failed to update sqlite table %s", error)
         finally:
             if connect:
-                connect.close()
+                #connect.close()
                 logging.info("The SQLite connection is closed")
 
     @staticmethod
@@ -74,18 +74,18 @@ class DatabaseWorker:
             cursor = connect.cursor()
             task = (status, time)
 
-            sql = ''' UPDATE msg_list SET isSent = ? where msg_time = ?'''
+            sql = ''' UPDATE or IGNORE msg_list SET isSent = ? where msg_time = ?'''
 
             cursor.execute(sql, task)
             connect.commit()
             cursor.close()
 
         except sqlite3.Error as error:
-            print("Failed to update sqlite table", error)
+            print("Failed to update state sqlite table", error)
             logging.error("Failed to update sqlite table %s", error)
         finally:
             if connect:
-                connect.close()
+                #connect.close()
                 logging.info("The SQLite connection is closed")
 
     @staticmethod
@@ -105,7 +105,7 @@ class DatabaseWorker:
             logging.error("Failed to read sqlite table %s", error)
         finally:
             if connect:
-                connect.close()
+                #connect.close()
                 logging.info("The SQLite connection is closed")
 
 

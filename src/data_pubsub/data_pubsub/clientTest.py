@@ -48,44 +48,44 @@ def group_call(a):
     minimal_client.send_request()
     minimal_client.self_spin()
 
-def loop():
-    for i in range(3):
-        a = "kek" + str(i) + "kek"
-        print(a)
-        group_call(a)
-
-    print("ENDLOOP")
-
-
-def main(args=None):
-    rclpy.init(args=args)
-
-    loop()
-
-    while True:
-        pass
-
-    # database_thread = threading.Thread(target=loop)
-    # database_thread.setDaemon(True)
-    # database_thread.start()
-
-    # while rclpy.ok():
-    #     print("a")
-    #     rclpy.spin_once(minimal_client)
-    #     if minimal_client.future.done():
-    #         try:
-    #             response = minimal_client.future.result()
-    #         except Exception as e:
-    #             minimal_client.get_logger().info(
-    #                 'Service call failed %r' % (e,))
-    #         else:
-    #             minimal_client.get_logger().info(
-    #                 'Result of add_three_ints: for %d + %d + %d = %d')
-    #         break
-    #
-    # minimal_client.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
+# def loop():
+#     for i in range(3):
+#         a = "kek" + str(i) + "kek"
+#         print(a)
+#         group_call(a)
+#
+#     print("ENDLOOP")
+#
+#
+# def main(args=None):
+#     rclpy.init(args=args)
+#
+#     loop()
+#
+#     while True:
+#         pass
+#
+#     # database_thread = threading.Thread(target=loop)
+#     # database_thread.setDaemon(True)
+#     # database_thread.start()
+#
+#     # while rclpy.ok():
+#     #     print("a")
+#     #     rclpy.spin_once(minimal_client)
+#     #     if minimal_client.future.done():
+#     #         try:
+#     #             response = minimal_client.future.result()
+#     #         except Exception as e:
+#     #             minimal_client.get_logger().info(
+#     #                 'Service call failed %r' % (e,))
+#     #         else:
+#     #             minimal_client.get_logger().info(
+#     #                 'Result of add_three_ints: for %d + %d + %d = %d')
+#     #         break
+#     #
+#     # minimal_client.destroy_node()
+#     rclpy.shutdown()
+#
+#
+# if __name__ == '__main__':
+#     main()
