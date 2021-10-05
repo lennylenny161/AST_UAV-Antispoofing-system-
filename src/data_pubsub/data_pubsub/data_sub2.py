@@ -139,7 +139,6 @@ class DataSubscriber(Node):
             else:
                 print("GETGETGET QUEUE")
                 data = q.get()
-                # self.save_data_to_DB(data[0], data[1], data[2])
                 DatabaseWorker.write_data(conn, data[0], data[1], data[2])
 
 
@@ -209,13 +208,14 @@ def loop_read_database():
         if len(unsent_data) == 0:
             conn = DatabaseWorker().create_connection()
             data = DatabaseWorker.read_unsent_data(conn)
-            unsent_data = data
             print(data, 'DATA')
-            #print(len(data), "РАЗМЕР МАССИВА")
-            send_data_to_analyzer()
+            if (data != None) :
+                unsent_data = data
+                #print(len(data), "РАЗМЕР МАССИВА")
+                send_data_to_analyzer()
         else:
             print("NOT EMPTY")
-        loop_time = get_update_unsent_data_time()
+        loop_time = 1 # get_update_unsent_data_time()
         time.sleep(loop_time)
 
 
