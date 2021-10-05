@@ -211,7 +211,7 @@ def loop_read_database():
             data = DatabaseWorker.read_unsent_data(conn)
             unsent_data = data
             print(data, 'DATA')
-            print(len(data), "РАЗМЕР МАССИВА")
+            #print(len(data), "РАЗМЕР МАССИВА")
             send_data_to_analyzer()
         else:
             print("NOT EMPTY")
