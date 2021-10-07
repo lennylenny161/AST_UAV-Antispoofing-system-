@@ -97,7 +97,7 @@ class SimulatorSubscriber(Node):
     def listener_callback(self, msg, monitor):
         print("CALLBACK SUBSCRIBER")
         print(msg)
-        text = str(msg.check_result) + str(msg.error_code) + msg.error_description + '\n'
+        text = str(msg.check_result) + " " + str(msg.error_code) + " " + msg.error_description + '\n'
         print(text)
         # app.set_text(text)
         monitor.update_list(text)

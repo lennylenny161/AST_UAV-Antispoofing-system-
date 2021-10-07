@@ -1,5 +1,6 @@
 import numpy as np
 import configparser
+import random
 from .FileReader import *
 from collections import deque
 
@@ -79,8 +80,16 @@ class Simulator:
         #last_value = list[-1]
         avg = self.average(list)
         if is_int:
-            avg = int(avg)
+            random_value = random.randint(0, 100)
+            avg = int(avg) + random_value
+            print("RANDOM", random_value)
+        else:
+            random_value = random.randint(0, 100)
+            avg = avg + random_value
+            print("RANDOM", random_value)
 
+        print("REAL", list[0])
+        print("AVG", avg)
         return avg
         #sign = True
         #if list[-2] > list[-1]:

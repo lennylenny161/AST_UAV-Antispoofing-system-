@@ -25,6 +25,7 @@ setup(
         	'state_talker = data_pubsub.state_pub:main',
         	'talker = data_pubsub.data_pub:main',
         	'listener = data_pubsub.data_sub:main',
+        	'listener2 = data_pubsub.data_sub3:main',
         	'service = data_pubsub.serverTest:main',
         	'client = data_pubsub.clientTest:main',
         ],

@@ -12,10 +12,66 @@ from collections import deque
 from interfaces.msg import SpoofingControl
 from interfaces.msg import Ins
 from interfaces.msg import AnalyzerCallback
+from interfaces.msg import AntiSpoofing
 from .FileReader import *
 from .simulator import *
 from .database import *
 from .clientTest import *
+
+class FakeDataPublisher(Node):
+
+    def __init__(self):
+        super().__init__('fake_data_class')
+        self.publisher_ = self.create_publisher(Ins, 'fake_ins_data', 10)
+
+    def callback(self, data):
+        msg = Ins()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.status = data.status
+        msg.pitch = data.pitch
+        msg.roll = data.roll
+        msg.course = data.course
+        msg.w_x = data.w_x
+        msg.w_y = data.w_y
+        msg.w_z = data.w_z
+        msg.a_x = data.a_x
+        msg.a_y = data.a_y
+        msg.a_z = data.a_z
+        msg.gps_speed = data.gps_speed
+        msg.gps_track_angle = data.gps_track_angle
+        msg.gps_satellite_number = data.gps_satellite_number
+        msg.altitude = data.altitude
+        msg.latitude = data.latitude
+        msg.longitude = data.longitude
+        msg.gps_utc_date = data.gps_utc_date
+        msg.utc_time = data.utc_time
+        msg.targeting = data.targeting
+        msg.temperature = data.temperature
+
+        self.publisher_.publish(msg)
+
+
+class SimulatorAntiSpoofingPublisher(Node):
+
+    on_state = bytes('1', 'utf-8')
+    off_state = bytes('0', 'utf-8')
+
+    def __init__(self):
+        super().__init__('simulator_anti_spoofing_class')
+        self.publisher_ = self.create_publisher(AntiSpoofing, 'anti_spoofing', 10)
+
+    def callback(self, anal_result, beFake):
+        msg = AntiSpoofing()
+        if anal_result:
+            msg.nav_state = self.on_state
+        else:
+            msg.nav_state = self.off_state
+        if beFake:
+            msg.module_state = self.off_state
+        else:
+            msg.module_state = self.on_state
+        # print("SEND CALLBACK", msg)
+        self.publisher_.publish(msg)
 
 class SimulatorCallbackPublisher(Node):
     def __init__(self):
@@ -27,7 +83,7 @@ class SimulatorCallbackPublisher(Node):
         msg.check_result = data.check_result
         msg.error_code = data.error_code
         msg.error_description = data.error_description
-        print("SEND CALLBACK", msg)
+        #print("SEND CALLBACK", msg)
         self.publisher_.publish(msg)
 
 class SpoofingControlSubscriber(Node):
@@ -60,6 +116,7 @@ class DataSubscriber(Node):
         q = queue.Queue()
         threading.Thread(target=self.queue_loop_reader, args=(q,), daemon=True).start()
         self.data_buffer = self.get_simulate_data_size()
+        self.simulate_list = []
         callback_lambda = lambda x: self.listener_callback(x, control_state, q)
         self.subscription = self.create_subscription(
             Ins,
@@ -79,8 +136,9 @@ class DataSubscriber(Node):
         if control_state[0].decode('utf-8') == '1':
             print("ATTACK")
             logging.info('catch attack state time = %s', str(timestamp))
-
-            threading.Thread(target=self.add_data_in_queue, args=(q, data, round_value, 1,)).start()
+            simulate_value = self.simulate()
+            self.simulate_list.append(str(round_value))
+            threading.Thread(target=self.add_data_in_queue, args=(q, simulate_value, round_value, 1,)).start()
             # simulate_value = self.simulate()
             # threading.Thread(target=self.create_callback_pub(simulate_value)).start()
         else:
@@ -127,19 +185,70 @@ class DataSubscriber(Node):
         #                         msg.targeting,
         #                         msg.temperature))
 
-    def add_data_in_queue(self, q, data, time, beFake):
-        print("ADD TO QUEUE")
-        q.put([data, time, beFake])
+    def add_data_in_queue(self, q, data, _time, beFake):
+        #print("ADD TO QUEUE")
+        q.put([data, _time, beFake])
+        time.sleep(0.1)
 
     def queue_loop_reader(self, q):
         conn = DatabaseWorker().create_connection()
         while True:
             if q.empty():
+                #print("EMpTY")
                 pass
             else:
-                print("GETGETGET QUEUE")
+                #print("GETGETGET QUEUE")
                 data = q.get()
-                DatabaseWorker.write_data(conn, data[0], data[1], data[2])
+                #DatabaseWorker.write_data(conn, data[0], data[1], data[2])
+                self.group_call2(data[0], data[1])
+
+    def self_spin2(self, client):
+        #print("self_spin")
+        simulator_publisher = SimulatorCallbackPublisher()
+        antispoofing_publisher = SimulatorAntiSpoofingPublisher()
+        while rclpy.ok():
+            rclpy.spin_once(client)
+            if client.future.done():
+                result = client.future.result()  # SENT TO GUI
+                #print(result, "RESULT")
+                logging.info('send data to callback publisher')
+                simulator_publisher.callback(result)
+                check_data = self.check_simulate(result)
+                antispoofing_publisher.callback(result.check_result, check_data)
+                client.destroy_node()
+                break
+
+    def check_simulate(self, data):
+        if data.error_description in self.simulate_list:
+            return False
+        else:
+            return True
+
+
+    def group_call2(self, data, _time):
+        name = "AnalyzerClientAsync2"
+        client = AnalyzerClientAsync(name)
+        #print("SEND DATA TO SERVER", data)
+        client.send_request(data, _time)
+        self.self_spin2(client)
+
+
+    # def loop_read_queue():
+    #     global unsent_data
+    #     while True:
+    #         print(len(unsent_data), "Длинна")
+    #         if len(unsent_data) == 0:
+    #             conn = DatabaseWorker().create_connection()
+    #             data = DatabaseWorker.read_unsent_data(conn)
+    #             print(data, 'DATA')
+    #             if (data != None):
+    #                 unsent_data = data
+    #                 # print(len(data), "РАЗМЕР МАССИВА")
+    #                 send_data_to_analyzer()
+    #         else:
+    #             print("NOT EMPTY")
+    #         loop_time = 1  # get_update_unsent_data_time()
+    #         time.sleep(loop_time)
 
 
     def save_data_to_DB(self, data, time, beFake):
@@ -151,6 +260,8 @@ class DataSubscriber(Node):
         logging.info('simulate data')
         simulator = Simulator()
         new_value = simulator.simulate_new_value(self.data_buffer)
+        fake_publisher = FakeDataPublisher()
+        threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
 
     def parse_msg_to_data(self, msg: Ins):
@@ -249,7 +360,7 @@ def send_data_to_analyzer():
     copy_data = unsent_data.copy()
     for data in copy_data:
         print('send_data_to_analyzer LOOP')
-        group_call(data)
+        #group_call(data) ALARM
         unsent_data.remove(data)
     print("End Loop")
 
@@ -259,23 +370,23 @@ def main(args=None):
 
     Loger.set_type("sim")
 
-    database_thread = threading.Thread(target=loop_read_database)
-    database_thread.setDaemon(True)
-    database_thread.start()
+    #database_thread = threading.Thread(target=loop_read_database)
+    #database_thread.setDaemon(True)
+    #database_thread.start()
 
     spoof_control_state = [bytes('0', 'utf-8')]
     print('MAIN "%a"' % (id(spoof_control_state)))
 
     global simulator_publisher
 
-    simulator_publisher = SimulatorCallbackPublisher()
+    #simulator_publisher = SimulatorCallbackPublisher()
     data_subscriber = DataSubscriber('/rtk_1/ins_data', spoof_control_state)
     spoofing_subscriber = SpoofingControlSubscriber('spoofing_control_topic', spoof_control_state)
 
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(data_subscriber)
     executor.add_node(spoofing_subscriber)
-    executor.add_node(simulator_publisher)
+    #executor.add_node(simulator_publisher)
 
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()

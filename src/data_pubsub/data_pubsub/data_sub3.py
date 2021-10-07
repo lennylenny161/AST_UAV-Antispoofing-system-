@@ -1,21 +1,22 @@
 import rclpy
 from rclpy.node import Node
 
-from interfaces.msg import AntiSpoofing
+from interfaces.msg import Ins
 
 class MinimalSubscriber(Node):
 
     def __init__(self):
-        super().__init__('simulator_anti_spoofing_class')
+        super().__init__('fake_class')
         self.subscription = self.create_subscription(
-            AntiSpoofing,
-            'anti_spoofing',
+            Ins,
+            'fake_ins_data',
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s" "%s"' % (msg.nav_state.decode('utf-8'), msg.module_state.decode('utf-8')))
+        print(msg)
+        #self.get_logger().info('I heard: "%s" "%s"' % (msg.nav_state.decode('utf-8'), msg.module_state.decode('utf-8')))
 
 
 def main(args=None):

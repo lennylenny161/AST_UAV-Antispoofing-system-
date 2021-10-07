@@ -24,15 +24,15 @@ class AnalyzerService(Node):
         self.dataset.append(request)
         self.dataset = self.dataset[-int(self.setup['slice_size']):]
         if len(self.dataset) < self.setup['slice_size']:
-            return set_result(response, False, 100, str(datetime.now()))
+            return set_result(response, False, 100, request.time)
 
         if self.check_invalid_data(request):
-            return set_result(response, True, 101, str(datetime.now()))
+            return set_result(response, True, 101, request.time)
 
         total_score = sum(list(map(lambda field_config: self.field_processing(self.dataset, field_config), self.setup['fields'])))
         error_code = (110, 111)[total_score > self.setup['attack_score']]
         # error_code = ('Normal', 'Attack!')[total_score > setup['attack_score']]
-        return set_result(response, True, error_code, str(datetime.now()))
+        return set_result(response, True, error_code, request.time)
 
 
     def field_processing(self, data, field_config):
@@ -56,17 +56,17 @@ class AnalyzerService(Node):
 
     def check_invalid_data(self, request):
         for field in self.setup['required_fields']:
-            # if getattr(request, field) in INVALID_FORMAT:
-            logging.warning('Invalid data in field [%s]', str(field))
-            return True
-            # else:
-            #     return False
+            if getattr(request, field) in INVALID_FORMAT:
+                logging.warning('Invalid data in field [%s]', str(field))
+                return True
+            else:
+                return False
 
 
 def set_result(response, check, error_code, description):
     response.check_result = check
     response.error_code = error_code
-    response.error_description = description
+    response.error_description = str(description)
     return response
 
 
