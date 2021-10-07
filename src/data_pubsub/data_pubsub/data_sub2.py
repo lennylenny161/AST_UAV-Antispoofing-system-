@@ -381,7 +381,7 @@ def main(args=None):
 
     #simulator_publisher = SimulatorCallbackPublisher()
     data_subscriber = DataSubscriber('/rtk_1/ins_data', spoof_control_state)
-    spoofing_subscriber = SpoofingControlSubscriber('spoofing_control_topic', spoof_control_state)
+    spoofing_subscriber = SpoofingControlSubscriber('spoofing_control', spoof_control_state)
 
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(data_subscriber)

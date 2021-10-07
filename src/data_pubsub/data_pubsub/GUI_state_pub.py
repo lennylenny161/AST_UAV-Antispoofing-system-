@@ -110,7 +110,7 @@ class StatePublisher(Node):
 
     def __init__(self):
         super().__init__('spoof_state_publisher')
-        self.publisher_ = self.create_publisher(SpoofingControl, 'spoofing_control_topic', 10)
+        self.publisher_ = self.create_publisher(SpoofingControl, 'spoofing_control', 10)
 
     def callback(self, spoof_state):
         msg = SpoofingControl()
