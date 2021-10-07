@@ -70,6 +70,7 @@ class SimulatorAntiSpoofingPublisher(Node):
             msg.module_state = self.off_state
         else:
             msg.module_state = self.on_state
+
         # print("SEND CALLBACK", msg)
         self.publisher_.publish(msg)
 
@@ -130,14 +131,96 @@ class DataSubscriber(Node):
         data = self.parse_msg_to_data(msg)
         self.save_data_buffer(data)
 
+
         timestamp = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1000000000)
         round_value = round(timestamp, 5)
+
+        logging.info('Real DATA "%f" '
+                     ' pitch "%f" '
+                     ' roll "%f" '
+                     ' course "%f" '
+                     ' w_x "%f"'
+                     ' w_y "%f"'
+                     ' w_z "%f"'
+                     ' a_x "%f"'
+                     ' a_y "%f"'
+                     ' a_z "%f"'
+                     ' gps_speed "%f"'
+                     ' gps_track_angle "%f"'
+                     ' gps_satellite_number "%f"'
+                     ' altitude "%f"'
+                     ' latitude "%f"'
+                     ' longitude "%f"'
+                     ' gps_utc_date "%f"'
+                     ' utc_time "%f"'
+                     ' targeting "%i"'
+                     ' temperature "%i"' %
+                     (round_value,
+                      data.pitch,
+                      data.roll,
+                      data.course,
+                      data.w_x,
+                      data.w_y,
+                      data.w_z,
+                      data.a_x,
+                      data.a_y,
+                      data.a_z,
+                      data.gps_speed,
+                      data.gps_track_angle,
+                      data.gps_satellite_number,
+                      data.altitude,
+                      data.latitude,
+                      data.longitude,
+                      data.gps_utc_date,
+                      data.utc_time,
+                      data.targeting,
+                      data.temperature))
 
         if control_state[0].decode('utf-8') == '1':
             print("ATTACK")
             logging.info('catch attack state time = %s', str(timestamp))
             simulate_value = self.simulate()
             self.simulate_list.append(str(round_value))
+            logging.info('SIMULATE DATA "%f" '
+                         ' pitch "%f" '
+                         ' roll "%f" '
+                         ' course "%f" '
+                         ' w_x "%f"'
+                         ' w_y "%f"'
+                         ' w_z "%f"'
+                         ' a_x "%f"'
+                         ' a_y "%f"'
+                         ' a_z "%f"'
+                         ' gps_speed "%f"'
+                         ' gps_track_angle "%f"'
+                         ' gps_satellite_number "%f"'
+                         ' altitude "%f"'
+                         ' latitude "%f"'
+                         ' longitude "%f"'
+                         ' gps_utc_date "%f"'
+                         ' utc_time "%f"'
+                         ' targeting "%i"'
+                         ' temperature "%i"' %
+                         (round_value,
+                          simulate_value.pitch,
+                          simulate_value.roll,
+                          simulate_value.course,
+                          simulate_value.w_x,
+                          simulate_value.w_y,
+                          simulate_value.w_z,
+                          simulate_value.a_x,
+                          simulate_value.a_y,
+                          simulate_value.a_z,
+                          simulate_value.gps_speed,
+                          simulate_value.gps_track_angle,
+                          simulate_value.gps_satellite_number,
+                          simulate_value.altitude,
+                          simulate_value.latitude,
+                          simulate_value.longitude,
+                          simulate_value.gps_utc_date,
+                          simulate_value.utc_time,
+                          simulate_value.targeting,
+                          simulate_value.temperature))
             threading.Thread(target=self.add_data_in_queue, args=(q, simulate_value, round_value, 1,)).start()
             # simulate_value = self.simulate()
             # threading.Thread(target=self.create_callback_pub(simulate_value)).start()
@@ -220,6 +303,7 @@ class DataSubscriber(Node):
 
     def check_simulate(self, data):
         if data.error_description in self.simulate_list:
+            self.simulate_list.remove(data.error_description)
             return False
         else:
             return True
