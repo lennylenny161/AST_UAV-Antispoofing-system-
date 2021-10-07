@@ -131,7 +131,6 @@ class DataSubscriber(Node):
         data = self.parse_msg_to_data(msg)
         self.save_data_buffer(data)
 
-
         timestamp = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1000000000)
         round_value = round(timestamp, 5)
 
@@ -147,7 +146,7 @@ class DataSubscriber(Node):
                      ' a_z "%f"'
                      ' gps_speed "%f"'
                      ' gps_track_angle "%f"'
-                     ' gps_satellite_number "%f"'
+                     ' gps_satellite_number "%a"'
                      ' altitude "%f"'
                      ' latitude "%f"'
                      ' longitude "%f"'
@@ -193,7 +192,7 @@ class DataSubscriber(Node):
                          ' a_z "%f"'
                          ' gps_speed "%f"'
                          ' gps_track_angle "%f"'
-                         ' gps_satellite_number "%f"'
+                         ' gps_satellite_number "%a"'
                          ' altitude "%f"'
                          ' latitude "%f"'
                          ' longitude "%f"'

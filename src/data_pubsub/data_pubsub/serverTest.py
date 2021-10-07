@@ -5,6 +5,7 @@ import logging
 import rclpy
 from rclpy.node import Node
 from datetime import datetime
+from .loger import *
 
 INVALID_FORMAT = ['0', 0]
 
@@ -21,6 +22,7 @@ class AnalyzerService(Node):
         setup_file.close()
 
     def analyzer_callback(self, request, response):
+        print(request)
         self.dataset.append(request)
         self.dataset = self.dataset[-int(self.setup['slice_size']):]
         if len(self.dataset) < self.setup['slice_size']:
@@ -40,6 +42,7 @@ class AnalyzerService(Node):
             return 0
 
         data_selection = list(map(lambda event: int(getattr(event, field_config['name'])), data))
+        #print(data_selection, "DATA_Selection")
         probability = calculate_distribution(data_selection)
 
         cached_value = self.store.get(field_config['name'])
@@ -88,7 +91,8 @@ def average(collection):
 
 def main(args=None):
     rclpy.init(args=args)
-
+    print("MAIN")
+    Loger.set_type("anal")
     analyzer_server = AnalyzerService()
 
     rclpy.spin(analyzer_server)
