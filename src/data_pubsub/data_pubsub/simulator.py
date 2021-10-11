@@ -62,7 +62,7 @@ class Simulator:
         new_value.a_z = self.new_value(a_z_list, False)
         new_value.gps_speed = self.new_value(gps_speed_list, False)
         new_value.gps_track_angle = self.new_value(gps_track_angle_list, False)
-        new_value.gps_satellite_number = self.new_value(gps_satellite_number_list, False)
+        new_value.gps_satellite_number = self.new_value(gps_satellite_number_list, True)
         new_value.altitude = self.new_value(altitude_list, False)
         new_value.latitude = self.new_value(latitude_list, False)
         new_value.longitude = self.new_value(longitude_list, False)
@@ -70,6 +70,8 @@ class Simulator:
         new_value.utc_time = self.new_value(utc_time_list, False)
         new_value.targeting = self.new_value(targeting_list, True)
         new_value.temperature = self.new_value(temperature_list, True)
+
+        print("NEW VALUE TEM", new_value.temperature)
 
         return new_value
 

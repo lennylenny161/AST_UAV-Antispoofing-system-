@@ -30,7 +30,7 @@ module interfaces {
 
       double gps_track_angle;
 
-      double gps_satellite_number;
+      uint16 gps_satellite_number;
 
       double altitude;
 
@@ -42,7 +42,7 @@ module interfaces {
 
       double utc_time;
 
-      uint16 targeting;
+      int16 targeting;
 
       uint16 temperature;
     };

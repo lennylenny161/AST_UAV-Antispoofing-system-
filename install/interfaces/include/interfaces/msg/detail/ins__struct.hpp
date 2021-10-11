@@ -54,7 +54,7 @@ struct Ins_
       this->a_z = 0.0;
       this->gps_speed = 0.0;
       this->gps_track_angle = 0.0;
-      this->gps_satellite_number = 0.0;
+      this->gps_satellite_number = 0;
       this->altitude = 0.0;
       this->latitude = 0.0;
       this->longitude = 0.0;
@@ -83,7 +83,7 @@ struct Ins_
       this->a_z = 0.0;
       this->gps_speed = 0.0;
       this->gps_track_angle = 0.0;
-      this->gps_satellite_number = 0.0;
+      this->gps_satellite_number = 0;
       this->altitude = 0.0;
       this->latitude = 0.0;
       this->longitude = 0.0;
@@ -99,7 +99,7 @@ struct Ins_
     std_msgs::msg::Header_<ContainerAllocator>;
   _header_type header;
   using _status_type =
-    unsigned char;
+    uint8_t;
   _status_type status;
   using _pitch_type =
     double;
@@ -135,7 +135,7 @@ struct Ins_
     double;
   _gps_track_angle_type gps_track_angle;
   using _gps_satellite_number_type =
-    double;
+    uint16_t;
   _gps_satellite_number_type gps_satellite_number;
   using _altitude_type =
     double;
@@ -153,7 +153,7 @@ struct Ins_
     double;
   _utc_time_type utc_time;
   using _targeting_type =
-    uint16_t;
+    int16_t;
   _targeting_type targeting;
   using _temperature_type =
     uint16_t;
@@ -167,7 +167,7 @@ struct Ins_
     return *this;
   }
   Type & set__status(
-    const unsigned char & _arg)
+    const uint8_t & _arg)
   {
     this->status = _arg;
     return *this;
@@ -239,7 +239,7 @@ struct Ins_
     return *this;
   }
   Type & set__gps_satellite_number(
-    const double & _arg)
+    const uint16_t & _arg)
   {
     this->gps_satellite_number = _arg;
     return *this;
@@ -275,7 +275,7 @@ struct Ins_
     return *this;
   }
   Type & set__targeting(
-    const uint16_t & _arg)
+    const int16_t & _arg)
   {
     this->targeting = _arg;
     return *this;

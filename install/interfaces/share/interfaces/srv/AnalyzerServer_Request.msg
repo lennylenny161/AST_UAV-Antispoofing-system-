@@ -14,7 +14,7 @@ float64 a_z
 
 float64 gps_speed
 float64 gps_track_angle
-float64 gps_satellite_number
+uint16 gps_satellite_number
 float64 altitude
 
 float64 latitude
@@ -23,5 +23,5 @@ float64 longitude
 float64 gps_utc_date
 float64 utc_time
 
-uint16 targeting
+int16 targeting
 uint16 temperature

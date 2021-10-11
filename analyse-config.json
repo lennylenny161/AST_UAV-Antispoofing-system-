@@ -3,9 +3,33 @@
   "step_size": 1,
   "attack_score": 1,
   "required_fields": [
-    "temperature"
+    "gps_speed",
+    "temperature",
+    "altitude",
+    "latitude",
+    "longitude"
   ],
   "fields": [
+    {
+      "name": "gps_speed",
+      "threshold": 0.01,
+      "score": 1
+    },
+    {
+      "name": "altitude",
+      "threshold": 0.01,
+      "score": 1
+    },
+    {
+      "name": "latitude",
+      "threshold": 0.01,
+      "score": 1
+    },
+    {
+      "name": "longitude",
+      "threshold": 0.01,
+      "score": 1
+    },
     {
       "name": "temperature",
       "threshold": 0.01,

@@ -13,7 +13,7 @@ class DatabaseWorker:
         Loger.set_type("db")
         conn = None
         try:
-            conn = sqlite3.connect('data_database', check_same_thread=False, isolation_level=None)
+            conn = sqlite3.connect('data_database', check_same_thread=False)
         except Error as e:
             logging.error("Cant connect database", e)
 
@@ -26,10 +26,9 @@ class DatabaseWorker:
 
         try:
             cursor = connect.cursor()
-            status = data.status.decode('utf-8')
             is_sent = 0
             task = (time,
-                    status,
+                    data.status,
                     data.pitch,
                     data.roll,
                     data.course,
@@ -65,7 +64,7 @@ class DatabaseWorker:
 
         finally:
             if connect:
-                # connect.close()
+                #connect.close()
                 logging.info("The SQLite connection is closed")
 
 
@@ -87,7 +86,7 @@ class DatabaseWorker:
             logging.error("Failed to update sqlite table %s", error)
         finally:
             if connect:
-                connect.close()
+                #connect.close()
                 logging.info("The SQLite connection is closed")
 
     @staticmethod

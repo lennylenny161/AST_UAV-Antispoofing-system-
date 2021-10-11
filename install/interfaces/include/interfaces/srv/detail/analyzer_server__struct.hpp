@@ -49,7 +49,7 @@ struct AnalyzerServer_Request_
       this->a_z = 0.0;
       this->gps_speed = 0.0;
       this->gps_track_angle = 0.0;
-      this->gps_satellite_number = 0.0;
+      this->gps_satellite_number = 0;
       this->altitude = 0.0;
       this->latitude = 0.0;
       this->longitude = 0.0;
@@ -78,7 +78,7 @@ struct AnalyzerServer_Request_
       this->a_z = 0.0;
       this->gps_speed = 0.0;
       this->gps_track_angle = 0.0;
-      this->gps_satellite_number = 0.0;
+      this->gps_satellite_number = 0;
       this->altitude = 0.0;
       this->latitude = 0.0;
       this->longitude = 0.0;
@@ -127,7 +127,7 @@ struct AnalyzerServer_Request_
     double;
   _gps_track_angle_type gps_track_angle;
   using _gps_satellite_number_type =
-    double;
+    uint16_t;
   _gps_satellite_number_type gps_satellite_number;
   using _altitude_type =
     double;
@@ -145,7 +145,7 @@ struct AnalyzerServer_Request_
     double;
   _utc_time_type utc_time;
   using _targeting_type =
-    uint16_t;
+    int16_t;
   _targeting_type targeting;
   using _temperature_type =
     uint16_t;
@@ -225,7 +225,7 @@ struct AnalyzerServer_Request_
     return *this;
   }
   Type & set__gps_satellite_number(
-    const double & _arg)
+    const uint16_t & _arg)
   {
     this->gps_satellite_number = _arg;
     return *this;
@@ -261,7 +261,7 @@ struct AnalyzerServer_Request_
     return *this;
   }
   Type & set__targeting(
-    const uint16_t & _arg)
+    const int16_t & _arg)
   {
     this->targeting = _arg;
     return *this;

@@ -55,7 +55,7 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Ins_message_m
   },
   {
     "status",  // name
-    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET,  // type
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8,  // type
     0,  // upper bound of string
     nullptr,  // members of sub message
     false,  // is array
@@ -235,7 +235,7 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Ins_message_m
   },
   {
     "gps_satellite_number",  // name
-    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_DOUBLE,  // type
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16,  // type
     0,  // upper bound of string
     nullptr,  // members of sub message
     false,  // is array
@@ -325,7 +325,7 @@ static const ::rosidl_typesupport_introspection_cpp::MessageMember Ins_message_m
   },
   {
     "targeting",  // name
-    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16,  // type
+    ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16,  // type
     0,  // upper bound of string
     nullptr,  // members of sub message
     false,  // is array

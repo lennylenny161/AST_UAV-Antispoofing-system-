@@ -5,10 +5,10 @@ import logging
 import rclpy
 from rclpy.node import Node
 from datetime import datetime
-from .loger import *
-from decimal import Decimal
 
 INVALID_FORMAT = ['0', 0]
+
+
 class AnalyzerService(Node):
 
     def __init__(self):
@@ -31,7 +31,8 @@ class AnalyzerService(Node):
             return set_result(response, True, 101, request.time)
 
         total_score = sum(list(map(lambda field_config: self.field_processing(self.dataset, field_config), self.setup['fields'])))
-        error_code = (110, 111)[total_score > self.setup['attack_score']]
+        error_code = (110, 111)[total_score > float(self.setup['attack_score'])]
+        logging.info('Total Score - %s, Score: %f; Error code: %i ', total_score, float(self.setup['attack_score']), error_code)
         # error_code = ('Normal', 'Attack!')[total_score > setup['attack_score']]
         return set_result(response, True, error_code, request.time)
 
@@ -41,7 +42,6 @@ class AnalyzerService(Node):
             return 0
 
         data_selection = list(map(lambda event: int(getattr(event, field_config['name'])), data))
-        #print(data_selection, "DATA_Selection")
         probability = calculate_distribution(data_selection)
 
         cached_value = self.store.get(field_config['name'])
@@ -75,12 +75,13 @@ def set_result(response, check, error_code, description):
 def calculate_distribution(collection):
     current_value = abs(collection[-1])
     estimated_value = abs(average(collection))
-    distribution = (Decimal(math.e) ** Decimal(estimated_value * -1)) * (Decimal(estimated_value) ** Decimal(current_value)) / math.factorial(current_value)
+    distribution = ((math.e ** (estimated_value * -1)) * (estimated_value ** current_value)) / math.factorial(
+        current_value)
     return distribution
 
 
 def entropy(current_value, previous_value):
-    return Decimal(previous_value) * Decimal(math.log(previous_value / current_value))
+    return previous_value * (math.log(previous_value / current_value))
 
 
 def average(collection):
@@ -89,8 +90,7 @@ def average(collection):
 
 def main(args=None):
     rclpy.init(args=args)
-    print("MAIN")
-    Loger.set_type("anal")
+
     analyzer_server = AnalyzerService()
 
     rclpy.spin(analyzer_server)

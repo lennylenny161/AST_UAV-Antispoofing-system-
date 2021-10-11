@@ -1,6 +1,6 @@
 std_msgs/Header header
 
-byte status
+uint8 status
 
 float64 pitch        # pitching angle, grad
 float64 roll         # angle of roll, grad
@@ -16,7 +16,7 @@ float64 a_z	     # z-axis acceleration,m/s/s
 
 float64 gps_speed
 float64 gps_track_angle
-float64 gps_satellite_number
+uint16 gps_satellite_number
 float64 altitude
 
 float64 latitude	# Latitude [degrees]. Positive is north of equator; negative is south.
@@ -25,6 +25,6 @@ float64 longitude	# Longitude [degrees]. Positive is east of prime meridian; neg
 float64 gps_utc_date
 float64 utc_time
 
-uint16 targeting
+int16 targeting
 uint16 temperature
 

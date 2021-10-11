@@ -55,7 +55,7 @@ static rosidl_typesupport_introspection_c__MessageMember Ins__rosidl_typesupport
   },
   {
     "status",  // name
-    rosidl_typesupport_introspection_c__ROS_TYPE_OCTET,  // type
+    rosidl_typesupport_introspection_c__ROS_TYPE_UINT8,  // type
     0,  // upper bound of string
     NULL,  // members of sub message
     false,  // is array
@@ -235,7 +235,7 @@ static rosidl_typesupport_introspection_c__MessageMember Ins__rosidl_typesupport
   },
   {
     "gps_satellite_number",  // name
-    rosidl_typesupport_introspection_c__ROS_TYPE_DOUBLE,  // type
+    rosidl_typesupport_introspection_c__ROS_TYPE_UINT16,  // type
     0,  // upper bound of string
     NULL,  // members of sub message
     false,  // is array
@@ -325,7 +325,7 @@ static rosidl_typesupport_introspection_c__MessageMember Ins__rosidl_typesupport
   },
   {
     "targeting",  // name
-    rosidl_typesupport_introspection_c__ROS_TYPE_UINT16,  // type
+    rosidl_typesupport_introspection_c__ROS_TYPE_INT16,  // type
     0,  // upper bound of string
     NULL,  // members of sub message
     false,  // is array

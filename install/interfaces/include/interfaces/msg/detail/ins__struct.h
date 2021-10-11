@@ -37,13 +37,13 @@ typedef struct interfaces__msg__Ins
   double a_z;
   double gps_speed;
   double gps_track_angle;
-  double gps_satellite_number;
+  uint16_t gps_satellite_number;
   double altitude;
   double latitude;
   double longitude;
   double gps_utc_date;
   double utc_time;
-  uint16_t targeting;
+  int16_t targeting;
   uint16_t temperature;
 } interfaces__msg__Ins;
 

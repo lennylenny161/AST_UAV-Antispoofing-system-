@@ -3,7 +3,7 @@ import numpy as np
 class ControllerDataClass:
 
     def __init__(self,
-                 status = bytes('0', 'utf-8'),
+                 status: int = 0,
                  pitch: np.float64 = 0.0,
                  roll: np.float64 = 0.0,
                  course: np.float64 = 0.0,
@@ -15,7 +15,7 @@ class ControllerDataClass:
                  a_z: np.float64 = 0.0,
                  gps_speed: np.float64 = 0.0,
                  gps_track_angle: np.float64 = 0.0,
-                 gps_satellite_number: np.float64 = 0.0,
+                 gps_satellite_number: int = 0.0,
                  altitude: np.float64 = 0.0,
                  latitude: np.float64 = 0.0,
                  longitude: np.float64 = 0.0,
@@ -23,7 +23,7 @@ class ControllerDataClass:
                  utc_time: np.float64 = 0.0,
                  targeting: int = 0,
                  temperature: int = 0):
-        self.status = bytes(str(status), 'utf-8')
+        self.status = int(status)
         self.pitch = np.float64(pitch)
         self.roll = np.float64(roll)
         self.course = np.float64(course)
@@ -35,7 +35,7 @@ class ControllerDataClass:
         self.a_z = np.float64(a_z)
         self.gps_speed = np.float64(gps_speed)
         self.gps_track_angle = np.float64(gps_track_angle)
-        self.gps_satellite_number = np.float64(gps_satellite_number)
+        self.gps_satellite_number = int(gps_satellite_number)
         self.altitude = np.float64(altitude)
         self.latitude = np.float64(latitude)
         self.longitude = np.float64(longitude)
