@@ -18,8 +18,6 @@ class AnalyzerClientAsync(Node):
         self.request = AnalyzerServer.Request()
 
     def send_request(self, data: ControllerDataClass):
-        #print("send_request")
-        #print(data)
 
         self.request.time = data[0]
         self.request.pitch = data[2]
