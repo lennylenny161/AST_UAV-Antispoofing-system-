@@ -94,7 +94,7 @@ class DatabaseWorker:
         Loger.set_type("db")
         try:
             cursor = connect.cursor()
-            sql = ''' SELECT * from msg_list where isSent = 0 LIMIT 20'''
+            sql = ''' SELECT * from msg_list where isSent = 0 LIMIT 30'''
             cursor.execute(sql)
             records = cursor.fetchall()
 

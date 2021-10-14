@@ -1,10 +1,60 @@
 import numpy as np
 import configparser
+import math 
 import random
 from .FileReader import *
 from collections import deque
 
 class Simulator:
+
+    def __init__(self):
+        super().__init__()
+        self.get_config()
+
+
+    def get_config(self):
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        self.simulator_mode = int(config['SimulatorConfig']['simulator_mode'])
+
+        self.pitch_min = int(config['SimulatorDataConfig']['pitch_min'])
+        self.pitch_max = int(config['SimulatorDataConfig']['pitch_max'])
+        self.roll_min = int(config['SimulatorDataConfig']['roll_min'])
+        self.roll_max = int(config['SimulatorDataConfig']['roll_max'])
+        self.course_min = int(config['SimulatorDataConfig']['course_min'])
+        self.course_max = int(config['SimulatorDataConfig']['course_max'])
+        self.w_x_min = int(config['SimulatorDataConfig']['w_x_min'])
+        self.w_x_max = int(config['SimulatorDataConfig']['w_x_max'])
+        self.w_y_min = int(config['SimulatorDataConfig']['w_y_min'])
+        self.w_y_max = int(config['SimulatorDataConfig']['w_y_max'])
+        self.w_z_min = int(config['SimulatorDataConfig']['w_z_min'])
+        self.w_z_max = int(config['SimulatorDataConfig']['w_z_max'])
+        self.a_x_min = int(config['SimulatorDataConfig']['a_x_min'])
+        self.a_x_max = int(config['SimulatorDataConfig']['a_x_max'])
+        self.a_y_min = int(config['SimulatorDataConfig']['a_y_min'])
+        self.a_y_max = int(config['SimulatorDataConfig']['a_y_max'])
+        self.a_z_min = int(config['SimulatorDataConfig']['a_z_min'])
+        self.a_z_max = int(config['SimulatorDataConfig']['a_z_max'])
+        self.gps_speed_min = int(config['SimulatorDataConfig']['gps_speed_min'])
+        self.gps_speed_max = int(config['SimulatorDataConfig']['gps_speed_max'])
+        self.gps_track_angle_min = int(config['SimulatorDataConfig']['gps_track_angle_min'])
+        self.gps_track_angle_max = int(config['SimulatorDataConfig']['gps_track_angle_max'])
+        self.gps_satellite_number_min = int(config['SimulatorDataConfig']['gps_satellite_number_min'])
+        self.gps_satellite_number_max = int(config['SimulatorDataConfig']['gps_satellite_number_max'])
+        self.altitude_min = int(config['SimulatorDataConfig']['altitude_min'])
+        self.altitude_max = int(config['SimulatorDataConfig']['altitude_max'])
+        self.latitude_min = int(config['SimulatorDataConfig']['latitude_min'])
+        self.latitude_max = int(config['SimulatorDataConfig']['latitude_max'])
+        self.longitude_min = int(config['SimulatorDataConfig']['longitude_min'])
+        self.longitude_max = int(config['SimulatorDataConfig']['longitude_max'])
+        self.gps_utc_date_min = int(config['SimulatorDataConfig']['gps_utc_date_min'])
+        self.gps_utc_date_max = int(config['SimulatorDataConfig']['gps_utc_date_max'])
+        self.utc_time_min = int(config['SimulatorDataConfig']['utc_time_min'])
+        self.utc_time_max = int(config['SimulatorDataConfig']['utc_time_max'])
+        self.targeting_min = int(config['SimulatorDataConfig']['targeting_min'])
+        self.targeting_max = int(config['SimulatorDataConfig']['targeting_max'])
+        self.temperature_min = int(config['SimulatorDataConfig']['temperature_min'])
+        self.temperature_max = int(config['SimulatorDataConfig']['temperature_max'])
 
     def simulate_new_value(self, deque):
         data_list = deque.copy()
@@ -80,46 +130,44 @@ class Simulator:
 
     def new_value(self, list, is_int, id):
 
-        avg = self.average(list)
-
         if id == "pitch":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.pitch_min, self.pitch_max, is_int)
         elif id == "roll":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.roll_min, self.roll_max, is_int)
         elif id == "course":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.course_min, self.course_max, is_int)
         elif id == "w_x":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.w_x_min, self.w_x_max, is_int)
         elif id == "w_y":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.w_y_min, self.w_y_max, is_int)
         elif id == "w_z":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.w_z_min, self.w_z_max, is_int)
         elif id == "a_x":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.a_x_min, self.a_x_max, is_int)
         elif id == "a_y":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.a_y_min, self.a_y_max, is_int)
         elif id == "a_z":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.a_z_min, self.a_z_max, is_int)
         elif id == "gps_speed":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.gps_speed_min, self.gps_speed_max, is_int)
         elif id == "gps_track_angle":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.gps_track_angle_min, self.gps_track_angle_max, is_int)
         elif id == "gps_satellite_number":
-            avg = random.randint(0, 100)
+            return self.simulate_mode_func(list, self.gps_satellite_number_min, self.gps_satellite_number_max, is_int)
         elif id == "altitude":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.altitude_min, self.altitude_max, is_int)
         elif id == "latitude":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.latitude_min, self.latitude_max, is_int)
         elif id == "longitude":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.longitude_min, self.longitude_max, is_int)
         elif id == "gps_utc_date":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.gps_utc_date_min, self.gps_utc_date_max, is_int)
         elif id == "utc_time":
-            avg = random.uniform(0, 360)
+            return self.simulate_mode_func(list, self.utc_time_min, self.utc_time_max, is_int)
         elif id == "targeting":
-            avg = random.randint(-100, 100)
+            return self.simulate_mode_func(list, self.targeting_min, self.targeting_max, is_int)
         elif id == "temperature":
-            avg = random.randint(0, 100)
+            return self.simulate_mode_func(list, self.temperature_min, self.temperature_max, is_int)
 
         # if is_int:
         #     random_value = random.randint(0, 100)
@@ -131,6 +179,23 @@ class Simulator:
         #     print("RANDOM", random_value)
 
         print("REAL", list[0])
-        print("AVG", avg)
         return avg
+
+    def simulate_mode_func(self, current, bottom, top, is_int):
+        new_value = 0
+        if self.simulator_mode == 0:
+            new_value = self.average(current)
+        if self.simulator_mode == 1:
+            avg = self.average(current)
+            new_value = math.log(avg)
+        if self.simulator_mode == 2:
+            if is_int:
+                new_value = random.randint(bottom, top)
+            else:
+                new_value = random.uniform(bottom, top)
+        return new_value
+
+
+
+
 

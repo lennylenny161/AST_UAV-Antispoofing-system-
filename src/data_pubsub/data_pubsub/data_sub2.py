@@ -116,6 +116,7 @@ class DataSubscriber(Node):
         super().__init__("data_node")
         threading.Thread(target=self.queue_loop_reader, args=(q, True, ), daemon=True).start()
         self.data_buffer = self.get_simulate_data_size()
+        self.simulator = Simulator()
         callback_lambda = lambda x: self.listener_callback(x, control_state, q)
         self.subscription = self.create_subscription(
             Ins,
@@ -284,11 +285,9 @@ class DataSubscriber(Node):
             else:
                 self.choose_database_action(q, conn)
 
-
     def simulate(self):
         logging.info('simulate data')
-        simulator = Simulator()
-        new_value = simulator.simulate_new_value(self.data_buffer)
+        new_value = self.simulator.simulate_new_value(self.data_buffer)
         fake_publisher = FakeDataPublisher()
         threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
