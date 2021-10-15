@@ -186,12 +186,6 @@ class Simulator:
         if self.simulator_mode == 0:
             new_value = self.average(current)
         if self.simulator_mode == 1:
-            avg = self.average(current)
-            if is_int:
-                new_value = int(math.log(avg))
-            else:
-                new_value = math.log(avg)
-        if self.simulator_mode == 2:
             if is_int:
                 new_value = random.randint(bottom, top)
             else:

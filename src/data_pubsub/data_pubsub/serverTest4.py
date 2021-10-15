@@ -1,12 +1,13 @@
 from interfaces.srv import AnalyzerServer
 import json
 import math
-import logging
+from .loger import *
 import rclpy
+from decimal import *
 from rclpy.node import Node
 from datetime import datetime
 
-INVALID_FORMAT = ['0', 0]
+INVALID_FORMAT = ['0', 0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 
 class AnalyzerService(Node):
@@ -20,19 +21,25 @@ class AnalyzerService(Node):
         self.srv = self.create_service(AnalyzerServer, 'analyzer_server', self.analyzer_callback)
         setup_file.close()
 
+
     def analyzer_callback(self, request, response):
         print(request)
+        logging.info("Recieved event: %s", request)
+        if self.check_invalid_data(request):
+            return set_result(response, True, 101, request.time)
+
         self.dataset.append(request)
         self.dataset = self.dataset[-int(self.setup['slice_size']):]
         if len(self.dataset) < self.setup['slice_size']:
             return set_result(response, False, 100, request.time)
 
-        if self.check_invalid_data(request):
-            return set_result(response, True, 101, request.time)
+        distribution_per_fields = list(
+            map(lambda field_config: self.field_processing(self.dataset, field_config), self.setup['fields']))
+        total_score = sum(distribution_per_fields)
 
-        total_score = sum(list(map(lambda field_config: self.field_processing(self.dataset, field_config), self.setup['fields'])))
-        error_code = (110, 111)[total_score > float(self.setup['attack_score'])]
-        logging.info('Total Score - %s, Score: %f; Error code: %i ', total_score, float(self.setup['attack_score']), error_code)
+        error_code = (110, 111)[total_score >= float(self.setup['attack_score'])]
+        logging.info('Total Score - %s, Score: %f; Error code: %i ; %a', total_score, float(self.setup['attack_score']),
+                     error_code, distribution_per_fields)
         # error_code = ('Normal', 'Attack!')[total_score > setup['attack_score']]
         return set_result(response, True, error_code, request.time)
 
@@ -43,7 +50,7 @@ class AnalyzerService(Node):
 
         data_selection = list(map(lambda event: int(getattr(event, field_config['name'])), data))
         probability = calculate_distribution(data_selection)
-
+        logging.info("Config: [%s];Data selection: %a", field_config['name'], data_selection)
         cached_value = self.store.get(field_config['name'])
         entropy_value_1 = entropy(probability, cached_value) if cached_value else 0  # for each in collection
         entropy_value_2 = entropy(cached_value, probability) if cached_value else 0
@@ -55,6 +62,7 @@ class AnalyzerService(Node):
         logging.info('[%s]: %f(E1); %f(E2); Probability - %f; Conclusion - %s ',
                      str(field_config['name']), entropy_value_1, entropy_value_2, probability, attack_detector)
         return attack_detector
+
 
     def check_invalid_data(self, request):
         for field in self.setup['required_fields']:
@@ -75,13 +83,14 @@ def set_result(response, check, error_code, description):
 def calculate_distribution(collection):
     current_value = abs(collection[-1])
     estimated_value = abs(average(collection))
-    distribution = ((math.e ** (estimated_value * -1)) * (estimated_value ** current_value)) / math.factorial(
-        current_value)
+    distribution = Decimal(Decimal(math.e) ** Decimal(estimated_value * -1)) * (
+                Decimal(estimated_value) ** Decimal(current_value)) / math.factorial(current_value)
     return distribution
 
 
 def entropy(current_value, previous_value):
-    return previous_value * (math.log(previous_value / current_value))
+    # return Decimal(previous_value) * Decimal(math.log(previous_value / current_value))
+    return Decimal(previous_value) * Decimal(math.log(previous_value / current_value))
 
 
 def average(collection):
@@ -90,7 +99,7 @@ def average(collection):
 
 def main(args=None):
     rclpy.init(args=args)
-
+    Loger.set_type('anal')
     analyzer_server = AnalyzerService()
 
     rclpy.spin(analyzer_server)

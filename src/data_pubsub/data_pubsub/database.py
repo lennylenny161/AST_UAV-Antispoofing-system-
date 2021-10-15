@@ -87,6 +87,7 @@ class DatabaseWorker:
         finally:
             if connect:
                 #connect.close()
+                return time
                 logging.info("The SQLite connection is closed")
 
     @staticmethod
@@ -94,12 +95,12 @@ class DatabaseWorker:
         Loger.set_type("db")
         try:
             cursor = connect.cursor()
-            sql = ''' SELECT * from msg_list where isSent = 0 LIMIT 30'''
+            sql = ''' SELECT * from msg_list where isSent = 0'''
             cursor.execute(sql)
             records = cursor.fetchall()
 
             cursor.close()
-            print(len(records), "_____РАЗМЕР SELECT___")
+            #print(len(records), "_____РАЗМЕР SELECT___")
             return records
 
         except sqlite3.Error as error:

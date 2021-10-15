@@ -175,7 +175,7 @@ class DataSubscriber(Node):
                       data.temperature))
 
         if control_state[0].decode('utf-8') == '1':
-            print("ATTACK")
+            #print("ATTACK")
             logging.info('catch attack state time = %s', str(timestamp))
             simulate_value = self.simulate()
             logging.info('SIMULATE DATA "%f" '
@@ -266,21 +266,24 @@ class DataSubscriber(Node):
     def add_data_in_queue(self, q, data, _time, beFake):
         #print("ADD TO QUEUE")
         _type = "write"
-        q.put([_type, data, _time, beFake])
+        q.appendleft([_type, data, _time, beFake])
 
     def choose_database_action(self, q, conn):
-        data = q.get()
+        global sending_data
+        data = q.pop()
         if data[0] == "write":
             print("write")
             DatabaseWorker.write_data(conn, data[1], data[2], data[3])
         elif data[0] == "update":
             print("update")
-            DatabaseWorker.write_send_mark(conn, data[1], data[2])
+            _time = DatabaseWorker.write_send_mark(conn, data[1], data[2])
+            print("SENDING DATA BEFORE REMOVE", sending_data)
+            sending_data.remove(_time)
 
     def queue_loop_reader(self, q, loop_value):
         conn = DatabaseWorker().create_connection()
         while loop_value:
-            if q.empty():
+            if len(q) == 0:
                 pass
             else:
                 self.choose_database_action(q, conn)
@@ -288,8 +291,8 @@ class DataSubscriber(Node):
     def simulate(self):
         logging.info('simulate data')
         new_value = self.simulator.simulate_new_value(self.data_buffer)
-        fake_publisher = FakeDataPublisher()
-        threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
+        #fake_publisher = FakeDataPublisher()
+        #threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
 
     def parse_msg_to_data(self, msg: Ins):
@@ -330,10 +333,11 @@ class DataSubscriber(Node):
 
 
 unsent_data = []
+sending_data = []
 simulator_publisher: SimulatorCallbackPublisher
 antispoofing_publisher: SimulatorAntiSpoofingPublisher
 data_subscriber: DataSubscriber
-q: queue.Queue
+q: deque
 
 
 def get_update_unsent_data_time():
@@ -345,19 +349,22 @@ def get_update_unsent_data_time():
 
 def loop_read_database():
     global unsent_data
+    global sending_data
     #conn = DatabaseWorker().create_connection()
+    name = "AnalyzerClientAsync"
+    client = AnalyzerClientAsync(name)
     while True:
-        print(len(unsent_data), "Длинна")
         if len(unsent_data) == 0:
             conn = DatabaseWorker().create_connection()
             data = DatabaseWorker.read_unsent_data(conn)
-            print(data, 'DATA')
+            #print(data, 'DATA')
             if (data != None) :
                 if (len(data) != 0):
-                    unsent_data = data
-                    print("BEfore SEND")
-                # print(len(data), "РАЗМЕР МАССИВА")
-                    send_data_to_analyzer()
+                    unsent_data = correct_unsent_data(data)
+                    #append_with_contains(unsent_data, data)
+                    #print("BEfore SEND")
+
+                    send_data_to_analyzer(client)
                 else:
                     print("EMPTY ARRAY DATA")
         else:
@@ -365,46 +372,69 @@ def loop_read_database():
         loop_time = get_update_unsent_data_time()
         time.sleep(loop_time)
 
+def add_in_sending_data(data):
+    global sending_data
+    sending_data.append(data)
+    print("SENDING DATA", sending_data)
+
+def correct_unsent_data(data):
+    global sending_data
+    copy_data = data.copy()
+
+    for i in data:
+        if i[0] in sending_data:
+            copy_data.remove(i)
+
+    for data in copy_data:
+        print(data[0], "COPY DATA ELEMENT \n")
+    print("COPY DATA FULL_____", copy_data)
+
+    return copy_data
+
 
 def add_data_in_queue2(_time, status):
     global q
     _type = "update"
-    q.put([_type, _time, status])
+    q.append([_type, _time, status])
 
 def self_spin(client, data):
     global simulator_publisher
     global antispoofing_publisher
     global data_subscriber
-
+    global unsent_data
+    global sending_data
+    print("SELF SPIN \n")
     while rclpy.ok():
         rclpy.spin_once(client)
         if client.future.done():
             result = client.future.result() #SENT TO GUI
+            unsent_data.remove(data)
             #print(result, "RESULT")
+            print("REMOVE FROM UNSENT DATA \n")
             logging.info('send data to callback publisher')
             #DatabaseWorker.write_send_mark(conn, data[0], 1)
+            #sending_data.remove(data[0])
             simulator_publisher.callback(result)
             antispoofing_publisher.callback(result.check_result, bool(data[21]))
-            add_data_in_queue2(data[0], 1)
-            client.destroy_node()
+            #add_data_in_queue2(data[0], 1)
+            #client.destroy_node()
             break
 
 
-def group_call(data):
-    name = "AnalyzerClientAsync"
-    client = AnalyzerClientAsync(name)
+def group_call(data, client):
     print("SEND DATA TO SERVER", data)
     client.send_request(data)
+    add_in_sending_data(data[0])
+    add_data_in_queue2(data[0], 1)
     self_spin(client, data)
 
-def send_data_to_analyzer():
+def send_data_to_analyzer(client):
     global unsent_data
     copy_data = unsent_data.copy()
     for data in copy_data:
-        print('send_data_to_analyzer LOOP')
-        group_call(data) #ALARM
-        unsent_data.remove(data)
-    print("End Loop")
+        group_call(data, client) #ALARM
+        #unsent_data.remove(data)
+    #print("End Loop")
 
 
 def main(args=None):
@@ -413,14 +443,14 @@ def main(args=None):
     global q
 
     Loger.set_type("sim")
-    q = queue.Queue()
+    q = deque()
 
     database_thread = threading.Thread(target=loop_read_database, daemon=True)
     database_thread.setDaemon(True)
     database_thread.start()
 
     spoof_control_state = [bytes('0', 'utf-8')]
-    print('MAIN "%a"' % (id(spoof_control_state)))
+    #print('MAIN "%a"' % (id(spoof_control_state)))
 
     global simulator_publisher
     global antispoofing_publisher
