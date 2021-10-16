@@ -18,10 +18,10 @@ from .simulator import *
 from .database import *
 from .clientTest import *
 
-class FakeDataPublisher(Node):
+class FakeDataPublisher(Node, name):
 
     def __init__(self):
-        super().__init__('fake_data_class')
+        super().__init__(name)
         self.publisher_ = self.create_publisher(Ins, 'fake_ins_data', 10)
 
     def callback(self, data):
@@ -291,8 +291,9 @@ class DataSubscriber(Node):
     def simulate(self):
         logging.info('simulate data')
         new_value = self.simulator.simulate_new_value(self.data_buffer)
-        #fake_publisher = FakeDataPublisher()
-        #threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
+        name = date.today().strftime("%d/%m/%Y")
+        fake_publisher = FakeDataPublisher(name)
+        threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
 
     def parse_msg_to_data(self, msg: Ins):
@@ -350,7 +351,6 @@ def get_update_unsent_data_time():
 def loop_read_database():
     global unsent_data
     global sending_data
-    #conn = DatabaseWorker().create_connection()
     name = "AnalyzerClientAsync"
     client = AnalyzerClientAsync(name)
     while True:
@@ -361,9 +361,6 @@ def loop_read_database():
             if (data != None) :
                 if (len(data) != 0):
                     unsent_data = correct_unsent_data(data)
-                    #append_with_contains(unsent_data, data)
-                    #print("BEfore SEND")
-
                     send_data_to_analyzer(client)
                 else:
                     print("EMPTY ARRAY DATA")
@@ -413,10 +410,8 @@ def self_spin(client, data):
             print("REMOVE FROM UNSENT DATA \n")
             logging.info('send data to callback publisher')
             #DatabaseWorker.write_send_mark(conn, data[0], 1)
-            #sending_data.remove(data[0])
             simulator_publisher.callback(result)
             antispoofing_publisher.callback(result.check_result, bool(data[21]))
-            #add_data_in_queue2(data[0], 1)
             #client.destroy_node()
             break
 
