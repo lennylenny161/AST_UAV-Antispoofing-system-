@@ -3,10 +3,11 @@ import rclpy
 import threading
 import functools
 import configparser
-import datetime
+from datetime import date
 import copy
 import logging
 import queue
+import uuid
 from rclpy.node import Node
 from collections import deque
 from interfaces.msg import SpoofingControl
@@ -18,9 +19,9 @@ from .simulator import *
 from .database import *
 from .clientTest import *
 
-class FakeDataPublisher(Node, name):
+class FakeDataPublisher(Node):
 
-    def __init__(self):
+    def __init__(self, name):
         super().__init__(name)
         self.publisher_ = self.create_publisher(Ins, 'fake_ins_data', 10)
 
@@ -291,8 +292,9 @@ class DataSubscriber(Node):
     def simulate(self):
         logging.info('simulate data')
         new_value = self.simulator.simulate_new_value(self.data_buffer)
-        name = date.today().strftime("%d/%m/%Y")
-        fake_publisher = FakeDataPublisher(name)
+        name = str(uuid.uuid1())
+        a = name.replace("-","")
+        fake_publisher = FakeDataPublisher(name=a)
         threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
 
