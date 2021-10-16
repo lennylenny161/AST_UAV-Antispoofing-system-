@@ -294,7 +294,8 @@ class DataSubscriber(Node):
         new_value = self.simulator.simulate_new_value(self.data_buffer)
         name = str(uuid.uuid1())
         a = name.replace("-","")
-        fake_publisher = FakeDataPublisher(name=a)
+        b = "node" + a
+        fake_publisher = FakeDataPublisher(name=b)
         threading.Thread(target=fake_publisher.callback, args=(new_value,)).start()
         return new_value
 
